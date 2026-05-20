@@ -1,43 +1,41 @@
-import math
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, Column
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql.window import Window
 from .sparketl import ETLSpark
 
-@F.udf(returnType=T.DoubleType())
-def interpolate_timestamp(seq: int, event_timestamp: T.TimestampType, next_seq: int, next_event_timestamp: T.TimestampType) -> float:
-    try:
-        """
-        Interpolates a timestamp based on the seq number and time of surrounding rows.
-        """
+def interpolate_timestamp_expr(
+    seq_col: Column,
+    event_timestamp_col: Column,
+    next_seq_col: Column,
+    next_event_timestamp_col: Column,
+) -> Column:
+    s_ts = F.unix_timestamp(event_timestamp_col)
+    n_ts = F.unix_timestamp(next_event_timestamp_col)
+    delta_seq = next_seq_col - seq_col
+    interpolated = s_ts + (n_ts - s_ts) / delta_seq
+    return F.when(
+        delta_seq != 0,
+        F.to_timestamp(interpolated),
+    ).otherwise(F.lit(None).cast(T.TimestampType()))
 
-        # Linear interpolation:
-        timestamp_diff = (next_event_timestamp - event_timestamp).total_seconds()
-        interpolated_seconds = event_timestamp.timestamp() + timestamp_diff / (next_seq - seq)
-        return interpolated_seconds
-    except Exception as err:
-        print(f"Exception has been occurred :{err}")
-        print(f"seq: {seq} event_timestamp: {event_timestamp} next_seq: {next_seq} next_event_timestamp: {next_event_timestamp}")
 
-@F.udf(returnType=T.DoubleType())
-def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    try:
-        R: int = 6371000  # radius of Earth in meters
-        phi_1 = math.radians(lat1)
-        phi_2 = math.radians(lat2)
-
-        delta_phi = math.radians(lat2 - lat1)
-        delta_lambda = math.radians(lon2 - lon1)
-
-        a = math.sin(delta_phi / 2.0) ** 2 + math.cos(phi_1) * \
-            math.cos(phi_2) * math.sin(delta_lambda / 2.0) ** 2
-
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        return round(R * c, 2)  # output distance in meters
-    except Exception as err:
-        print(f"Exception has been occurred :{err}")
-        print(f"lon1: {lon1} lat1: {lat1} lon2: {lon2} lat2: {lat2}")
+def haversine_distance_expr(
+    lat1_col: Column,
+    lon1_col: Column,
+    lat2_col: Column,
+    lon2_col: Column,
+) -> Column:
+    r_m = 6371000.0
+    phi_1 = F.radians(lat1_col)
+    phi_2 = F.radians(lat2_col)
+    delta_phi = F.radians(lat2_col - lat1_col)
+    delta_lambda = F.radians(lon2_col - lon1_col)
+    a = F.pow(F.sin(delta_phi / 2.0), 2) + F.cos(phi_1) * F.cos(phi_2) * F.pow(
+        F.sin(delta_lambda / 2.0), 2
+    )
+    c = 2 * F.atan2(F.sqrt(a), F.sqrt(1 - a))
+    return F.round(F.lit(r_m) * c, 2)
 
 class BusItineraryRefinedProcess:
     
@@ -73,7 +71,15 @@ class BusItineraryRefinedProcess:
         self.bus_stops = self.bus_stops.withColumn("next_stop_id", F.lag("id", -1).over(window_spec))
         self.bus_stops = self.bus_stops.withColumn("next_stop_latitude", F.lag("latitude", -1).over(window_spec))
         self.bus_stops = self.bus_stops.withColumn("next_stop_longitude", F.lag("longitude", -1).over(window_spec))
-        self.bus_stops = self.bus_stops.withColumn("next_stop_delta_s", haversine(F.col("latitude"), F.col("longitude"), F.col("next_stop_latitude"), F.col("next_stop_longitude")))
+        self.bus_stops = self.bus_stops.withColumn(
+            "next_stop_delta_s",
+            haversine_distance_expr(
+                F.col("latitude"),
+                F.col("longitude"),
+                F.col("next_stop_latitude"),
+                F.col("next_stop_longitude"),
+            ),
+        )
 
         # Filter rows where id != next_stop_id or next_stop_id is null
         self.bus_stops = self.bus_stops.filter((F.col("id") != F.col("next_stop_id")) | F.col("next_stop_id").isNull())
@@ -164,7 +170,15 @@ class BusTrackingRefinedProcess:
         )        
 
         # Calculate the haversine distance
-        map_matching = map_matching.withColumn("distance", haversine(F.col("latitude"), F.col("longitude"), F.col("bus_stop_latitude"), F.col("bus_stop_longitude")))
+        map_matching = map_matching.withColumn(
+            "distance",
+            haversine_distance_expr(
+                F.col("latitude"),
+                F.col("longitude"),
+                F.col("bus_stop_latitude"),
+                F.col("bus_stop_longitude"),
+            ),
+        )
 
         # Filter for distances <= 50 meters
         map_matching = map_matching.filter(F.col("distance") <= 50)
@@ -283,78 +297,62 @@ class BusTrackingRefinedProcess:
             "generated"
         )        
 
-        c = 0
-        while c <= 7:
+        base_df = filtered_df.select(
+            "line_code",
+            "itinerary_id",
+            "vehicle",
+            "event_timestamp",
+            "seq",
+            "year",
+            "month",
+            "day",
+            "generated",
+        )
 
-            filtered_df = filtered_df.select(
-                "line_code",
-                "itinerary_id",            
-                "vehicle",
-                "event_timestamp",
-                "seq",
-                "year",
-                "month",
-                "day",
-                "generated"
-            )
+        base_with_next = base_df.withColumn(
+            "next_seq", F.lead(F.col("seq"), 1, None).over(windowSpec)
+        ).withColumn(
+            "next_event_timestamp", F.lead(F.col("event_timestamp"), 1, None).over(windowSpec)
+        )
 
-            # Interpolate and expand the DataFrame
-            interpolated_df = filtered_df.withColumn(
-                "next_seq", F.lead(F.col("seq"), 1, None).over(windowSpec)
-            ).withColumn(
-                "next_event_timestamp", F.lead(F.col("event_timestamp"), 1, None).over(windowSpec)
-            ).withColumn(
-                "interpolated_next_seq", (F.col("seq") + 1)
-            )
+        gap_condition = (
+            F.col("next_seq").isNotNull()
+            & (F.col("next_seq") != 0)
+            & (F.col("next_seq") > F.col("seq") + 1)
+        )
 
-            # Filter for interpolated points
-            interpolated_points = interpolated_df.filter(
-                (F.col("next_seq") != 0) & (F.col("next_seq") > F.col("interpolated_next_seq")) 
-            )
+        gaps_df = base_with_next.filter(gap_condition).withColumn(
+            "generated_seq",
+            F.explode(F.sequence(F.col("seq") + 1, F.col("next_seq") - 1)),
+        )
 
-            print(f"c = {c} | count = {interpolated_points.count()}")
+        s_ts = F.unix_timestamp(F.col("event_timestamp"))
+        n_ts = F.unix_timestamp(F.col("next_event_timestamp"))
+        delta_seq = (F.col("next_seq") - F.col("seq")).cast("double")
+        offset_seq = (F.col("generated_seq") - F.col("seq")).cast("double")
 
-            if interpolated_points.count() == 0:
-                break
+        generated_points = gaps_df.withColumn(
+            "interpolated_timestamp",
+            F.to_timestamp(s_ts + (n_ts - s_ts) * (offset_seq / delta_seq)),
+        ).withColumn(
+            "generated", F.lit(True)
+        ).filter(
+            F.col("interpolated_timestamp") < F.col("next_event_timestamp")
+        ).select(
+            "line_code",
+            "itinerary_id",
+            "vehicle",
+            F.col("interpolated_timestamp").alias("event_timestamp"),
+            F.col("generated_seq").alias("seq"),
+            "year",
+            "month",
+            "day",
+            "generated",
+        )
 
-            # Apply the interpolation UDF (passing columns directly)
-            interpolated_points = interpolated_points.withColumn(
-                "interpolated_timestamp",
-                interpolate_timestamp(                
-                    F.col("seq"),
-                    F.col("event_timestamp"),
-                    F.col("next_seq"),
-                    F.col("next_event_timestamp")
-                )
-            )
+        expanded_df = base_df.unionByName(generated_points)
 
-            interpolated_points = interpolated_points.withColumn(
-                "interpolated_timestamp", F.to_timestamp(F.col("interpolated_timestamp"))
-            ).withColumn(
-                "generated", F.lit(True)
-            ).filter("interpolated_timestamp < next_event_timestamp")
-
-            interpolated_points = interpolated_points.select(
-                "line_code",
-                "itinerary_id",            
-                "vehicle",
-                "interpolated_timestamp",  
-                "interpolated_next_seq",
-                "year",
-                "month",
-                "day",
-                "generated"
-            ).withColumnRenamed(
-                "interpolated_timestamp", "event_timestamp"
-            ).withColumnRenamed(
-                "interpolated_next_seq", "seq"
-            )
-
-            filtered_df = filtered_df.union(interpolated_points).orderBy("event_timestamp")
-
-            c = c + 1
-
-        joined_df = filtered_df.join(
+        joined_df = expanded_df.join(
             bus_stop_itineraries,
             on=["line_code", "itinerary_id", "seq"],
             how="left"  # Change to 'inner', 'right', 'outer' if needed
@@ -389,7 +387,7 @@ class BusTrackingRefinedProcess:
         )
 
         self.save(joined_df, "/data/refined/bus_tracking")
-        #self.save(filtered_df, "/data/refined/bus_tracking")
+        #self.save(expanded_df, "/data/refined/bus_tracking")
 
     def __call__(self, *args, **kwargs):
         self.perform()
