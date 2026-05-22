@@ -35,6 +35,7 @@ services:
     volumes:
       - .:/app/
       - ./data/:/data/
+      - ./data/mysql-files:/var/lib/mysql-files/
     networks:
       - default
     depends_on:

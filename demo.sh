@@ -1,7 +1,7 @@
 #!/bin/bash
 
 START_DATE="2022-07-11"
-END_DATE="2022-07-17"
+END_DATE="2022-07-11"
 
 # Build docker-image
 echo "Building docker image..."

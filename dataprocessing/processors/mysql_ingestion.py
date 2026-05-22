@@ -1,4 +1,6 @@
 from pyspark.sql import DataFrame
+from pyspark.sql import types as T
+from pyspark.sql.utils import AnalysisException
 
 from .sparketl import ETLSpark
 import pyspark.sql.functions as F
@@ -38,7 +40,7 @@ class MySQLDataProcess:
             "seq"
         ).withColumn(
             "event_timestamp",
-            F.date_format(F.col("event_timestamp"), "yyyy-MM-dd HH:mm:ss.SSSSSSSSS")
+            F.date_format(F.col("event_timestamp"), "yyyy-MM-dd HH:mm:ss.SSSSSS")
         )
 
         self.save(etl_event, "/var/lib/mysql-files/etl_event")
@@ -57,7 +59,6 @@ class MySQLDataProcess:
         database = os.environ.get("MYSQL_DATABASE")
 
         # Execute the MySQL command using subprocess
-        # mysql -uroot --password=$pwd -D busanalysis_dw -e "source ./src/sql/bulk_insert.sql"
         command = [
             "mysql",
             f"-h{host}",  # Add host 
@@ -65,10 +66,9 @@ class MySQLDataProcess:
             f"-u{user}",
             f"-p{password}",
             f"-D{database}",
-            f"-e", "source /opt/urbs-data-processing/dataprocessing/sql/bulk_insert.sql" 
+            f"-e", "source /app/dataprocessing/sql/bulk_insert.sql" 
         ]
         print(command)
-        # Replace the file path with your actual script path.
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
@@ -80,7 +80,6 @@ class MySQLDataProcess:
 
         # mysql -uroot --password=$pwd -D busanalysis_dw -e "call busanalysis_dw.sp_load_all('$1');"
         # Execute the MySQL command using subprocess
-        # mysql -uroot --password=$pwd -D busanalysis_dw -e "source ./src/sql/bulk_insert.sql"
         command = [
             "mysql",
             f"-h{host}",  # Add host 
@@ -91,7 +90,6 @@ class MySQLDataProcess:
             f"-e", f"call busanalysis_dw.sp_load_all('{self.year}-{self.month:02}-{self.day:02}');" 
         ]
         print(command)
-        # Replace the file path with your actual script path.
 
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
@@ -112,9 +110,31 @@ class MySQLDataProcess:
                 .distinct())
 
     def etl_event(self) -> DataFrame:
-        return (self.etlspark.sqlContext.read.option("mergeSchema", "true").parquet("/data/refined/bus_tracking")
+        try:
+            return (
+                self.etlspark.sqlContext.read.option("mergeSchema", "true")
+                .parquet("/data/refined/bus_tracking")
                 .filter(f"year =='{self.year}' and month=='{self.month}' and day=='{self.day}'")
-                .distinct())
+                .distinct()
+            )
+        except AnalysisException:
+            # This happens when bus_tracking exists but has no parquet data files yet.
+            return self.etlspark.sqlContext.createDataFrame([], self._event_schema())
+
+    @staticmethod
+    def _event_schema() -> T.StructType:
+        return T.StructType([
+            T.StructField("line_code", T.StringType(), True),
+            T.StructField("itinerary_id", T.IntegerType(), True),
+            T.StructField("vehicle", T.StringType(), True),
+            T.StructField("event_timestamp", T.TimestampType(), True),
+            T.StructField("id", T.IntegerType(), True),
+            T.StructField("seq", T.IntegerType(), True),
+            T.StructField("year", T.IntegerType(), True),
+            T.StructField("month", T.IntegerType(), True),
+            T.StructField("day", T.IntegerType(), True),
+            T.StructField("generated", T.BooleanType(), True),
+        ])
 
     @staticmethod
     def save(df: DataFrame, output: str):
