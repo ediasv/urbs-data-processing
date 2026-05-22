@@ -17,8 +17,8 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - /mnt/work/database/mysql:/var/lib/mysql/
-      - /mnt/work/database/mysql-files:/var/lib/mysql-files/
+      - ./data/mysql:/var/lib/mysql/
+      - ./data/mysql-files:/var/lib/mysql-files/
     networks:
       - default
 
@@ -27,14 +27,14 @@ services:
     restart: unless-stopped
     user: root
     build: .
-    image: utfpr/jupyterlab:latest
-    working_dir: /opt/urbs-data-processing/
+    image: urbs/gtfs-generator:0.1
+    working_dir: /app/
     ports:
       - 8085:8085
       - 4040:4040
     volumes:
-      - .:/opt/urbs-data-processing/
-      - /mnt/work/datalake:/data/
+      - .:/app/
+      - ./data/:/data/
     networks:
       - default
     depends_on:

@@ -5,7 +5,7 @@ RUN apt-get -qq update && apt-get install -y --no-install-recommends apt-utils o
 
 USER $NB_UID
 
-WORKDIR /opt/urbs-data-processing/
+WORKDIR /app
 
 ADD requirements.txt .
 RUN pip install -r requirements.txt
