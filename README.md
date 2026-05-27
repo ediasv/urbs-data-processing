@@ -1,9 +1,13 @@
 ### URBS DATA PROCESSING 
 
-### Build docker-image
+### Build container image
 
 ``` 
+# If you use Docker:
 docker-compose build
+
+# If you use Podman (recommended on some Linux distributions):
+podman compose build
 ```
 
 ### Download URBS Data
@@ -19,6 +23,7 @@ docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2
 ## Examples
 
 docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
+podman compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
 
 docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
 
@@ -32,6 +37,7 @@ docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2
 ## uncompress urbs data 
 
 docker-compose exec jupyterlab python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
+podman compose exec jupyterlab python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
 
 -fd: linhas, pontoslinha, veiculos
 -fl: linhas.json.xz, pontosLinha.json.xz, veiculos.json.xz
@@ -49,6 +55,7 @@ docker-compose exec jupyterlab python dataprocessing/job/decompress_files.py -s 
 ## process entire month data, prepare, deduplicate and clean for following processing pipelines.
 
 docker-compose exec jupyterlab  python dataprocessing/job/trust_ingestion.py -d "2022-07"
+podman compose exec jupyterlab  python dataprocessing/job/trust_ingestion.py -d "2022-07"
 
 ```
 
@@ -58,6 +65,7 @@ docker-compose exec jupyterlab  python dataprocessing/job/trust_ingestion.py -d 
 ### Execute refined processing for creating several enriched datasources.
 
 docker-compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
+podman compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
 
 -j [line, itinerary, tracking]
 
@@ -73,5 +81,6 @@ docker-compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -
 
 ```
 docker-compose exec jupyterlab  python dataprocessing/job/mysql_loader.py -ds "2022-07-11"  -de "2022-07-16"
+podman compose exec jupyterlab  python dataprocessing/job/mysql_loader.py -ds "2022-07-11"  -de "2022-07-16"
 
 ```
