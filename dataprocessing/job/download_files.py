@@ -44,6 +44,9 @@ def download_files(folder, file, start_date, end_date, base_url):
         os.makedirs(base_folder, exist_ok=True)
 
         fd = f"/data/staging/{datareferencia}/{folder}/{download_file_day}_{file}"
+        if os.path.exists(fd):
+            print(f"File already exists, skipping download: {fd}")
+            continue
 
         http = urllib3.PoolManager()
         r = http.request('GET', url, preload_content=False)
