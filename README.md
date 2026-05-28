@@ -4,7 +4,7 @@ This pipeline downloads URBS open data, decompresses it, and produces trusted/re
 
 ## Requirements
 - Python 3.8+
-- Java 8+ (required by PySpark)
+- Java 8 or 11 (required by PySpark; Java 17 is not supported by Spark 3.2.1)
 
 ## Install
 ```
@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ## Run with Podman (container)
 ```
-podman build -t urbs-data-processing .
+podman build --no-cache -t urbs-data-processing .
 podman run --rm -it -v "$PWD/data:/app/data" -e DATA_DIR=/app/data urbs-data-processing \
   python dataprocessing/job/download_files.py -s 2022-07-11 -e 2022-07-11 -fd veiculos -fl veiculos.json.xz
 

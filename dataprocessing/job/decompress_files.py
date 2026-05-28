@@ -43,22 +43,32 @@ def decompress_files(folder, file, start_date, end_date):
         base_folder = data_path("raw", datareferencia, folder)
         base_folder.mkdir(parents=True, exist_ok=True)
 
+        fstaging = data_path(
+            "staging",
+            datareferencia,
+            folder,
+            f"{download_file_day}_{file}",
+        )
+        fraw = base_folder / f"{download_file_day}_{file.replace('.xz', '')}"
+
+        if not fstaging.exists():
+            print(f"Missing staging file: {fstaging}")
+            continue
+
+        if fraw.exists():
+            print(f"{fraw} already decompressed; skipping")
+            continue
+
         try:
-            fstaging = data_path(
-                "staging",
-                datareferencia,
-                folder,
-                f"{download_file_day}_{file}",
-            )
-            fraw = base_folder / f"{download_file_day}_{file.replace('.xz', '')}"
+            with lzma.open(fstaging, mode='rt', encoding='utf-8') as source:
+                decompressed_data = source.read()
+        except (lzma.LZMAError, UnicodeDecodeError) as err:
+            print(f"Failed to decompress {fstaging}: {err}")
+            raise
 
-            binary_data_buffer = lzma.open(fstaging, mode='rt', encoding='utf-8').read()
-
-            with fraw.open('w') as a:
-                a.write(binary_data_buffer)
-            print(f"{fraw} decompressed")
-        except Exception as err:
-            print(f"Can't open file: {file} for date {download_file_day}")
+        with fraw.open('w') as target:
+            target.write(decompressed_data)
+        print(f"{fraw} decompressed")
 
 
 def delete_files():
