@@ -1,6 +1,7 @@
 import pyspark.sql.functions as F
 from pyspark.sql import DataFrame
 from .sparketl import ETLSpark
+from dataprocessing.config import data_path_str
 
 
 class TrustProcessing:
@@ -14,16 +15,16 @@ class TrustProcessing:
 
     def perform(self):
         vehicles = self.vehicles_ingestion(self.date)
-        self.save(vehicles, "/data/trusted/vehicles")
+        self.save(vehicles, data_path_str("trusted", "vehicles"))
 
         busstops = self.bustops_ingestion(self.date)
-        self.save(busstops, "/data/trusted/busstops")
+        self.save(busstops, data_path_str("trusted", "busstops"))
 
         lines = self.lines_ingestion(self.date)
-        self.save(lines, "/data/trusted/lines")
+        self.save(lines, data_path_str("trusted", "lines"))
 
     def vehicles_ingestion(self, period: str):
-        return (self.etlspark.sqlContext.read.json(f"/data/raw/{period}/veiculos")
+        return (self.etlspark.sqlContext.read.json(data_path_str("raw", period, "veiculos"))
                 .select(F.col("COD_LINHA").alias("line_code"),
                         F.date_format(F.unix_timestamp('dthr', 'dd/MM/yyyy HH:mm:ss').cast('timestamp'),
                                       "yyyy-MM-dd HH:mm:ss").alias('event_timestamp'),
@@ -37,7 +38,7 @@ class TrustProcessing:
                 .dropDuplicates())
 
     def lines_ingestion(self, period: str) -> DataFrame:
-        return (self.etlspark.extract(f"/data/raw/{period}/linhas")
+        return (self.etlspark.extract(data_path_str("raw", period, "linhas"))
                 .withColumn("service_category", F.col("categoria_servico"))
                 .withColumn("line_name", F.col("nome"))
                 .withColumn("line_code", F.col("cod"))
@@ -47,7 +48,7 @@ class TrustProcessing:
                 .dropDuplicates())
 
     def bustops_ingestion(self, period: str) -> DataFrame:
-        return (self.etlspark.extract(f"/data/raw/{period}/pontoslinha")
+        return (self.etlspark.extract(data_path_str("raw", period, "pontoslinha"))
                 .withColumn("line_code", F.col("cod"))
                 .withColumn("latitude", F.regexp_replace("lat", ",", "."))
                 .withColumn("longitude", F.regexp_replace("lon", ",", "."))

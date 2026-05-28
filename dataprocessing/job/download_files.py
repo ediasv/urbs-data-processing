@@ -8,6 +8,8 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath('..'))
 
+from dataprocessing.config import data_path
+
 parser = ArgumentParser()
 parser.add_argument("-s", "--start-date", dest="start_date", help="start date", metavar="DATE")
 parser.add_argument("-e", "--end-date", dest="end_date", help="end date", metavar="DATE")
@@ -39,19 +41,18 @@ def download_files(folder, file, start_date, end_date, base_url):
         url = f"{base_url}{download_file_day}_{file}"
         print(f"Downloading: {url}")
 
-        base_folder = f"/data/staging/{datareferencia}/{folder}"
+        base_folder = data_path("staging", datareferencia, folder)
+        base_folder.mkdir(parents=True, exist_ok=True)
 
-        os.makedirs(base_folder, exist_ok=True)
-
-        fd = f"/data/staging/{datareferencia}/{folder}/{download_file_day}_{file}"
-        if os.path.exists(fd):
+        fd = base_folder / f"{download_file_day}_{file}"
+        if fd.exists():
             print(f"File already exists, skipping download: {fd}")
             continue
 
         http = urllib3.PoolManager()
         r = http.request('GET', url, preload_content=False)
 
-        with open(fd, 'wb') as out:
+        with fd.open('wb') as out:
             while True:
                 data = r.read()
                 if not data:

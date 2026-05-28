@@ -3,6 +3,7 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql.window import Window
 from .sparketl import ETLSpark
+from dataprocessing.config import data_path_str
 
 def interpolate_timestamp_expr(
     seq_col: Column,
@@ -90,13 +91,13 @@ class BusItineraryRefinedProcess:
         window_spec = Window.partitionBy("line_code", "itinerary_id")
         self.bus_stops = self.bus_stops.withColumn("max_seq", F.max("seq").over(window_spec))
 
-        self.save(self.bus_stops, "/data/refined/bus_itineraries")
+        self.save(self.bus_stops, data_path_str("refined", "bus_itineraries"))
 
     def __call__(self, *args, **kwargs):
         self.perform()
 
     def filter_data(self, year: str, month: str, day: str) -> DataFrame:
-        return (self.etlspark.sqlContext.read.parquet("/data/trusted/busstops")
+        return (self.etlspark.sqlContext.read.parquet(data_path_str("trusted", "busstops"))
                 .filter(f"year =='{year}' and month=='{month}' and day=='{day}'"))
 
     @staticmethod
@@ -112,13 +113,13 @@ class BusLineRefinedProcess:
         self.bus_lines = self.filter_data(year, month, day)      
     
     def perform(self):
-        self.save(self.bus_lines, "/data/refined/bus_lines")
+        self.save(self.bus_lines, data_path_str("refined", "bus_lines"))
 
     def __call__(self, *args, **kwargs):
         self.perform()
 
     def filter_data(self, year: str, month: str, day: str) -> DataFrame:
-        return (self.etlspark.sqlContext.read.parquet("/data/trusted/lines")
+        return (self.etlspark.sqlContext.read.parquet(data_path_str("trusted", "lines"))
                 .filter(f"year =='{year}' and month=='{month}' and day=='{day}'"))
 
     @staticmethod
@@ -386,22 +387,22 @@ class BusTrackingRefinedProcess:
             "generated"
         )
 
-        self.save(joined_df, "/data/refined/bus_tracking")
+        self.save(joined_df, data_path_str("refined", "bus_tracking"))
         #self.save(expanded_df, "/data/refined/bus_tracking")
 
     def __call__(self, *args, **kwargs):
         self.perform()
 
     def filter_data(self, year: str, month: str, day: str) -> DataFrame:
-        return (self.etlspark.sqlContext.read.parquet("/data/trusted/vehicles")
+        return (self.etlspark.sqlContext.read.parquet(data_path_str("trusted", "vehicles"))
                 .filter(f"year =='{year}' and month=='{month}' and day=='{day}'"))
 
     def filter_bus_itineraries(self, year: str, month: str, day: str) -> DataFrame:
-        return (self.etlspark.sqlContext.read.parquet("/data/refined/bus_itineraries")
+        return (self.etlspark.sqlContext.read.parquet(data_path_str("refined", "bus_itineraries"))
                 .filter(f"year =='{year}' and month=='{month}' and day=='{day}'"))
 
     def filter_bus_lines(self, year: str, month: str, day: str) -> DataFrame:
-        return (self.etlspark.sqlContext.read.parquet("/data/refined/bus_lines")
+        return (self.etlspark.sqlContext.read.parquet(data_path_str("refined", "bus_lines"))
                 .filter(f"year =='{year}' and month=='{month}' and day=='{day}'"))
 
     @staticmethod

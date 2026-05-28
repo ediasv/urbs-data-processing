@@ -1,19 +1,13 @@
-FROM jupyter/pyspark-notebook:spark-3.2.1
+FROM python:3.10-slim
 
-USER root
-RUN apt-get -qq update && apt-get install -y --no-install-recommends apt-utils openssh-client mysql-client
-
-USER $NB_UID
+RUN apt-get -qq update \
+    && apt-get install -y --no-install-recommends openjdk-11-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-ADD requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD python setup.py -q develop && jupyter lab \
-        --ip=0.0.0.0 \
-        --port=8085 \
-        --allow-root \
-        --NotebookApp.notebook_dir='./notebooks' \
-        --NotebookApp.token='' \
-        --NotebookApp.password=''
+COPY . .
+RUN pip install --no-cache-dir -e .

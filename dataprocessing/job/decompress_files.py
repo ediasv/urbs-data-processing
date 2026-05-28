@@ -8,6 +8,8 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.abspath('..'))
 
+from dataprocessing.config import data_path
+
 parser = ArgumentParser()
 parser.add_argument("-s", "--start-date", dest="start_date", help="start date", metavar="DATE")
 parser.add_argument("-e", "--end-date", dest="end_date", help="end date", metavar="DATE")
@@ -38,17 +40,21 @@ def decompress_files(folder, file, start_date, end_date):
 
         datareferencia = day.replace(day=1).strftime("%Y-%m")
 
-        base_folder = f"/data/raw/{datareferencia}/{folder}"
-
-        os.makedirs(base_folder, exist_ok=True)
+        base_folder = data_path("raw", datareferencia, folder)
+        base_folder.mkdir(parents=True, exist_ok=True)
 
         try:
-            fstaging = f"/data/staging/{datareferencia}/{folder}/{download_file_day}_{file}"
-            fraw = f"{base_folder}/{download_file_day}_{file.replace('.xz', '')}"
+            fstaging = data_path(
+                "staging",
+                datareferencia,
+                folder,
+                f"{download_file_day}_{file}",
+            )
+            fraw = base_folder / f"{download_file_day}_{file.replace('.xz', '')}"
 
             binary_data_buffer = lzma.open(fstaging, mode='rt', encoding='utf-8').read()
 
-            with open(fraw, 'w') as a:
+            with fraw.open('w') as a:
                 a.write(binary_data_buffer)
             print(f"{fraw} decompressed")
         except Exception as err:
@@ -56,7 +62,7 @@ def decompress_files(folder, file, start_date, end_date):
 
 
 def delete_files():
-    base_folder = f"/data/staging/"
+    base_folder = data_path("staging")
     shutil.rmtree(base_folder, ignore_errors=True)
 
 
