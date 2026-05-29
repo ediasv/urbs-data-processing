@@ -3,30 +3,15 @@
 This pipeline downloads URBS open data, decompresses it, and produces trusted/refined Parquet datasets locally. The refined tracking job includes the interpolation step.
 
 ## Requirements
-- Python 3.8+
-- Java 8 or 11 (required by PySpark; Java 17 is not supported by Spark 3.2.1)
+- Python 3.10
+- Java 11 (required by PySpark; Java 17 is not supported by Spark 3.2.1)
 
 ## Install
 ```
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-## Run with Podman (container)
-```
-podman build --no-cache -t urbs-data-processing .
-podman run --rm -it -v "$PWD/data:/app/data" -e DATA_DIR=/app/data urbs-data-processing \
-  python dataprocessing/job/download_files.py -s 2022-07-11 -e 2022-07-11 -fd veiculos -fl veiculos.json.xz
-
-podman run --rm -it -v "$PWD/data:/app/data" -e DATA_DIR=/app/data urbs-data-processing \
-  python dataprocessing/job/decompress_files.py -s 2022-07-11 -e 2022-07-11 -fd veiculos -fl veiculos.json.xz
-
-podman run --rm -it -v "$PWD/data:/app/data" -e DATA_DIR=/app/data urbs-data-processing \
-  python dataprocessing/job/trust_ingestion.py -d 2022-07
-
-podman run --rm -it -v "$PWD/data:/app/data" -e DATA_DIR=/app/data urbs-data-processing \
-  python dataprocessing/job/refined_ingestion.py -ds 2022-07-11 -de 2022-07-11 -j tracking
+pip install -e .
 ```
 
 ## Data directory
@@ -44,9 +29,9 @@ Outputs:
 
 ## Download URBS data
 ```
-python3 dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
-python3 dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
-python3 dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
+python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
+python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
+python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
 ```
 
 Parameters:
@@ -55,21 +40,21 @@ Parameters:
 
 ## Decompress URBS data
 ```
-python3 dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
-python3 dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
-python3 dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
+python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
+python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
+python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
 ```
 
 ## Execute trust processor
 ```
-python3 dataprocessing/job/trust_ingestion.py -d "2022-07"
+python dataprocessing/job/trust_ingestion.py -d "2022-07"
 ```
 
 ## Execute refined processor (includes interpolation)
 ```
-python3 dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
-python3 dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j itinerary
-python3 dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j tracking
+python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
+python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j itinerary
+python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j tracking
 ```
 
 `-j` options: `line`, `itinerary`, `tracking`
