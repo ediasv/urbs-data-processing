@@ -1,11 +1,13 @@
-from argparse import ArgumentParser
 import hashlib
 import os
-from pathlib import Path
 import sys
+from argparse import ArgumentParser
+from pathlib import Path
 
-PACKAGE_PARENT = '..'
-SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+PACKAGE_PARENT = ".."
+SCRIPT_DIR = os.path.dirname(
+    os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__)))
+)
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 from dataprocessing.processors.sparketl import ETLSpark
@@ -58,7 +60,9 @@ def flat_file_checksum(root_path: str) -> str:
 
 
 def main():
-    parser = ArgumentParser(description="Compare two parquet datasets for schema, row, or byte equality")
+    parser = ArgumentParser(
+        description="Compare two parquet datasets for schema, row, or byte equality"
+    )
     parser.add_argument("left", help="Left parquet path")
     parser.add_argument("right", help="Right parquet path")
     parser.add_argument(

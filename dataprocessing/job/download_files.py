@@ -1,25 +1,28 @@
-from datetime import timedelta
-import urllib3
-
 import os
 import sys
 from argparse import ArgumentParser
-from datetime import datetime
+from datetime import datetime, timedelta
 
-sys.path.insert(0, os.path.abspath('..'))
+import urllib3
+
+sys.path.insert(0, os.path.abspath(".."))
 
 from dataprocessing.config import data_path
 
 parser = ArgumentParser()
-parser.add_argument("-s", "--start-date", dest="start_date", help="start date", metavar="DATE")
-parser.add_argument("-e", "--end-date", dest="end_date", help="end date", metavar="DATE")
+parser.add_argument(
+    "-s", "--start-date", dest="start_date", help="start date", metavar="DATE"
+)
+parser.add_argument(
+    "-e", "--end-date", dest="end_date", help="end date", metavar="DATE"
+)
 parser.add_argument("-fd", "--folder", dest="folder", help="folder", metavar="FOLDER")
 parser.add_argument("-fl", "--file", dest="file", help="file", metavar="FILE")
 
 args = parser.parse_args()
 
-start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
-end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
+start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
+end_date = datetime.strptime(args.end_date, "%Y-%m-%d")
 folder = args.folder
 file = args.file
 
@@ -50,9 +53,9 @@ def download_files(folder, file, start_date, end_date, base_url):
             continue
 
         http = urllib3.PoolManager()
-        r = http.request('GET', url, preload_content=False)
+        r = http.request("GET", url, preload_content=False)
 
-        with fd.open('wb') as out:
+        with fd.open("wb") as out:
             while True:
                 data = r.read()
                 if not data:
@@ -65,4 +68,10 @@ def download_files(folder, file, start_date, end_date, base_url):
     return "download realizado com sucesso"
 
 
-download_files(folder, file, start_date, end_date, base_url="http://dadosabertos.c3sl.ufpr.br/curitibaurbs/")
+download_files(
+    folder,
+    file,
+    start_date,
+    end_date,
+    base_url="http://dadosabertos.c3sl.ufpr.br/curitibaurbs/",
+)

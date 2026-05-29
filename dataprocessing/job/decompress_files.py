@@ -1,27 +1,32 @@
-from datetime import timedelta
 import lzma
-import shutil
 import os
+import shutil
 import sys
 from argparse import ArgumentParser
-from datetime import datetime
+from datetime import datetime, timedelta
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(".."))
 
 from dataprocessing.config import data_path
 
 parser = ArgumentParser()
-parser.add_argument("-s", "--start-date", dest="start_date", help="start date", metavar="DATE")
-parser.add_argument("-e", "--end-date", dest="end_date", help="end date", metavar="DATE")
+parser.add_argument(
+    "-s", "--start-date", dest="start_date", help="start date", metavar="DATE"
+)
+parser.add_argument(
+    "-e", "--end-date", dest="end_date", help="end date", metavar="DATE"
+)
 parser.add_argument("-fd", "--folder", dest="folder", help="folder", metavar="FOLDER")
 parser.add_argument("-fl", "--file", dest="file", help="file", metavar="FILE")
 
-parser.add_argument("-d", "--delete", dest="delete", help="delete staging files", metavar="DELETE")
+parser.add_argument(
+    "-d", "--delete", dest="delete", help="delete staging files", metavar="DELETE"
+)
 
 args = parser.parse_args()
 
-start_date = datetime.strptime(args.start_date, '%Y-%m-%d')
-end_date = datetime.strptime(args.end_date, '%Y-%m-%d')
+start_date = datetime.strptime(args.start_date, "%Y-%m-%d")
+end_date = datetime.strptime(args.end_date, "%Y-%m-%d")
 folder = args.folder
 file = args.file
 delete = args.delete
@@ -60,13 +65,13 @@ def decompress_files(folder, file, start_date, end_date):
             continue
 
         try:
-            with lzma.open(fstaging, mode='rt', encoding='utf-8') as source:
+            with lzma.open(fstaging, mode="rt", encoding="utf-8") as source:
                 decompressed_data = source.read()
         except (lzma.LZMAError, UnicodeDecodeError) as err:
             print(f"Failed to decompress {fstaging}: {err}")
             raise
 
-        with fraw.open('w') as target:
+        with fraw.open("w") as target:
             target.write(decompressed_data)
         print(f"{fraw} decompressed")
 
@@ -78,5 +83,5 @@ def delete_files():
 
 decompress_files(folder, file, start_date, end_date)
 
-if delete == 'y':
+if delete == "y":
     delete_files()

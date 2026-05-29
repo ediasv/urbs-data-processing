@@ -5,18 +5,18 @@ from pyspark.sql import SQLContext
 
 
 class ETLSpark:
-
     def __init__(self):
         self.conf = SparkConf().setAppName("App")
-        self.conf = (self.conf.setMaster('local[*]')
-                     .set("spark.executor.cores", 1)
-                     .set("spark.executor.instances", 4)
-                     .set('spark.executor.memory', '4G')
-                     .set('spark.driver.memory', '3G')
-                     .set('spark.driver.maxResultSize', '4G')
-                     .set('spark.sql.autoBroadcastJoinThreshold', '-1')
-                     .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
-                     )
+        self.conf = (
+            self.conf.setMaster("local[*]")
+            .set("spark.executor.cores", 1)
+            .set("spark.executor.instances", 4)
+            .set("spark.executor.memory", "4G")
+            .set("spark.driver.memory", "3G")
+            .set("spark.driver.maxResultSize", "4G")
+            .set("spark.sql.autoBroadcastJoinThreshold", "-1")
+            .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+        )
 
         self.sc = SparkContext.getOrCreate(conf=self.conf)
         self.sqlContext = SQLContext(self.sc)
@@ -40,19 +40,19 @@ class ETLSpark:
         df = self.sqlContext.read.json(src).withColumn("filepath", F.input_file_name())
 
         df = df.withColumn(
-            'filename',
+            "filename",
             F.regexp_extract(F.col("filepath"), r"([^/]+)$", 1),
         )
 
-        split = F.split(df['filename'], '_')
+        split = F.split(df["filename"], "_")
 
         # df = df.withColumn('datareferencia', F.to_date(
         #     F.concat(split.getItem(0), F.lit("-"), split.getItem(1), F.lit("-"),
         #              split.getItem(2)), 'yyyy-MM-dd'))
 
-        df = df.withColumn('year', split.getItem(0))
-        df = df.withColumn('month', split.getItem(1))
-        df = df.withColumn('day', split.getItem(2))
+        df = df.withColumn("year", split.getItem(0))
+        df = df.withColumn("month", split.getItem(1))
+        df = df.withColumn("day", split.getItem(2))
 
         dropcolumns = ["filepath", "filename"]
         df = df.toDF(*[c.lower() for c in df.columns]).drop(*dropcolumns)

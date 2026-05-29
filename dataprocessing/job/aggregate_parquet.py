@@ -22,11 +22,15 @@ def discover_parquet_files(source_path: Path) -> list[Path]:
     if not parquet_files:
         raise ValueError(f"No parquet files found under {source_path}")
 
-    return sorted(parquet_files, key=lambda path: path.relative_to(source_path).as_posix())
+    return sorted(
+        parquet_files, key=lambda path: path.relative_to(source_path).as_posix()
+    )
 
 
 def main() -> int:
-    parser = ArgumentParser(description="Flatten a parquet directory tree into a single parquet file")
+    parser = ArgumentParser(
+        description="Flatten a parquet directory tree into a single parquet file"
+    )
     parser.add_argument("source", help="Source parquet file or directory")
     parser.add_argument("target", help="Target single parquet file")
     args = parser.parse_args()
