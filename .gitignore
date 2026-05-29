@@ -110,3 +110,7 @@ venv.bak/
 docker-hive/namenode
 docker-hive/datanode
 data/
+
+.copilot
+
+.sdkmanrc

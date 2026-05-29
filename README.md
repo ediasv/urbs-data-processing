@@ -8,8 +8,8 @@ This pipeline downloads URBS open data, decompresses it, and produces trusted/re
 
 ## Install
 ```
-python3 -m venv .venv
-source .venv/bin/activate
+virtualenv -p python3.10 venv
+source venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
