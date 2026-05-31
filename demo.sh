@@ -1,11 +1,8 @@
 #!/bin/bash
 
 START_DATE="2025-07-11"
-END_DATE="2025-07-11"
-DATA_DIR="${DATA_DIR:-data}"
+END_DATE="2025-07-12"
 YEAR_MONTH="${START_DATE:0:7}"
-
-export DATA_DIR
 
 # Download URBS Data
 echo "Downloading URBS data..."

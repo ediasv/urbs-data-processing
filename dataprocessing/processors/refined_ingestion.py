@@ -470,8 +470,9 @@ class BusTrackingRefinedProcess:
     @staticmethod
     def save(df: DataFrame, output: str):
         (
-            df.write.mode("overwrite")
-            .partitionBy("year", "month", "day", "line_code")
+            df.coalesce(1)
+            .write.mode("overwrite")
+            .partitionBy("year", "month", "day")
             .format("parquet")
             .save(output)
         )
