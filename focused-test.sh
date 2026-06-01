@@ -22,13 +22,8 @@ spark-submit \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.plugins=com.nvidia.spark.SQLPlugin \
-    --conf spark.rapids.sql.enabled=true \
-    --conf spark.rapids.sql.explain=NONE \
-    --conf spark.rapids.memory.gpu.allocFraction=0.4 \
-    --conf spark.rapids.memory.gpu.pooling=ARENA \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
-    --conf spark.default.parallelism=4 \
-    --conf spark.sql.shuffle.partitions=4 \
+#    --conf spark.sql.shuffle.partitions=4 \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
