@@ -30,31 +30,31 @@ python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -f
 # Execute trusting processor
 echo "Processing trusting data..."
 spark-submit \
-    --master local[8] \
-    --executor-memory 16G \
-    --driver-memory 8G \
+    --master local[4] \
+    --executor-memory 8G \
+    --driver-memory 4G \
     dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
-    # Execute refined processor: Dimensions (CPU ONLY)
 
+# Execute refined processor: Dimensions (CPU ONLY)
 echo "Processing refined dimension data on CPU..."
 spark-submit \
-    --master local[8] \
-    --executor-memory 16G \
-    --driver-memory 8G \
+    --master local[4] \
+    --executor-memory 8G \
+    --driver-memory 4G \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
 
 spark-submit \
-    --master local[8] \
-    --executor-memory 16G \
-    --driver-memory 8G \
+    --master local[4] \
+    --executor-memory 8G \
+    --driver-memory 4G \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 
 # Execute refined processor: Tracking (GPU ENABLED)
 echo "Processing refined tracking data on GPU..."
 spark-submit \
-    --master local[8] \
-    --executor-memory 16G \
-    --driver-memory 16G \
+    --master local[4] \
+    --executor-memory 8G \
+    --driver-memory 8G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
