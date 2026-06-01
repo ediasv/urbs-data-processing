@@ -69,6 +69,7 @@ spark-submit \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
     --conf spark.default.parallelism=1 \
     --conf spark.sql.shuffle.partitions=1 \
+    --conf spark.rapids.force.caller.thread=true \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
