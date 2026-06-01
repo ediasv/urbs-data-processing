@@ -11,8 +11,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 
-START_DATE="2026-02-01"
-END_DATE="2026-02-31"
+START_DATE="2026-03-01"
+END_DATE="2026-03-30"
 YEAR_MONTH="${START_DATE:0:7}"
 
 # Download URBS Data
