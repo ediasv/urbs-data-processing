@@ -64,7 +64,7 @@ spark-submit \
     --conf spark.driver.resource.gpu.amount=1 \
     --conf spark.executor.resource.gpu.amount=1 \
     --conf spark.task.resource.gpu.amount=0.125 \
-    --conf spark.worker.resource.gpu.discoveryScript=/cvmfs/soft.computecanada.ca/easybuild/software/2023/x86-64-v3/Core/spark/3.5.6/bin/getGpusResources.sh \
+    --conf spark.worker.resource.gpu.discoveryScript=/home/ediasv/scripts/get_gpus.sh \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
