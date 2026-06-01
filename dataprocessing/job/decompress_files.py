@@ -69,7 +69,7 @@ def decompress_files(folder, file, start_date, end_date):
                 decompressed_data = source.read()
         except (lzma.LZMAError, UnicodeDecodeError) as err:
             print(f"Failed to decompress {fstaging}: {err}")
-            raise
+            continue
 
         with fraw.open("w") as target:
             target.write(decompressed_data)

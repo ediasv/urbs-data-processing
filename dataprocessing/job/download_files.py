@@ -55,6 +55,13 @@ def download_files(folder, file, start_date, end_date, base_url):
         http = urllib3.PoolManager()
         r = http.request("GET", url, preload_content=False)
 
+        if r.status != 200:
+            print(
+                f"Remote file missing or server error (HTTP {r.status}). Skipping: {url}"
+            )
+            r.release_conn()
+            continue
+
         with fd.open("wb") as out:
             while True:
                 data = r.read()
