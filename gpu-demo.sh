@@ -52,7 +52,7 @@ spark-submit \
 # Execute refined processor: Tracking (GPU ENABLED)
 echo "Processing refined tracking data on GPU..."
 spark-submit \
-    --master local[1] \
+    --master local[4] \
     --executor-memory 6G \
     --driver-memory 6G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
@@ -61,15 +61,11 @@ spark-submit \
     --conf spark.plugins=com.nvidia.spark.SQLPlugin \
     --conf spark.rapids.sql.enabled=true \
     --conf spark.rapids.sql.explain=NONE \
-    --conf spark.executor.resource.gpu.amount=1 \
-    --conf spark.executor.resource.gpu.discoveryScript=/home/ediasv/scripts/get_gpus.sh \
-    --conf spark.task.resource.gpu.amount=1 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
-    --conf spark.default.parallelism=1 \
-    --conf spark.sql.shuffle.partitions=1 \
-    --conf spark.rapids.force.caller.thread=true \
+    --conf spark.default.parallelism=4 \
+    --conf spark.sql.shuffle.partitions=4 \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
