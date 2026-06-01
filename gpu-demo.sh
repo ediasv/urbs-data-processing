@@ -64,4 +64,7 @@ spark-submit \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
+echo "Uploading refined data to Hugging Face..."
+python dataprocessing/job/upload_huggingface.py -d "$YEAR_MONTH"
+
 echo "All tasks completed!"
