@@ -54,7 +54,7 @@ echo "Processing refined tracking data on GPU..."
 spark-submit \
     --master local[8] \
     --executor-memory 16G \
-    --driver-memory 8G \
+    --driver-memory 16G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \

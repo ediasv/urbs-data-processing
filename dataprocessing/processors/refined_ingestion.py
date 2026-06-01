@@ -447,7 +447,6 @@ class BusTrackingRefinedProcess:
         )
 
         self.save(joined_df, data_path_str("refined", "bus_tracking"))
-        # self.save(expanded_df, "/data/refined/bus_tracking")
 
     def __call__(self, *args, **kwargs):
         self.perform()
