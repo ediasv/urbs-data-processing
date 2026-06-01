@@ -11,8 +11,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 
-START_DATE="2026-04-16"
-END_DATE="2026-04-18"
+START_DATE="2026-02-01"
+END_DATE="2026-02-31"
 YEAR_MONTH="${START_DATE:0:7}"
 
 # Download URBS Data
@@ -59,13 +59,8 @@ spark-submit \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.plugins=com.nvidia.spark.SQLPlugin \
-    --conf spark.rapids.sql.enabled=true \
-    --conf spark.rapids.sql.explain=NONE \
-    --conf spark.rapids.memory.gpu.allocFraction=0.4 \
-    --conf spark.rapids.memory.gpu.pooling=ARENA \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
-    --conf spark.default.parallelism=4 \
-    --conf spark.sql.shuffle.partitions=4 \
+#    --conf spark.sql.shuffle.partitions=4 \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
