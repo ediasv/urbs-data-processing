@@ -60,7 +60,6 @@ spark-submit \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.plugins=com.nvidia.spark.SQLPlugin \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
-#    --conf spark.sql.shuffle.partitions=4 \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
