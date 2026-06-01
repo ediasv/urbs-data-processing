@@ -33,17 +33,6 @@ spark-submit \
     --master local[8] \
     --executor-memory 16G \
     --driver-memory 8G \
-    --jars rapids-4-spark_2.12-26.04.2.jar \
-    --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
-    --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
-    --conf spark.plugins=com.nvidia.spark.SQLPlugin \
-    --conf spark.rapids.sql.enabled=true \
-    --conf spark.rapids.sql.explain=ALL \
-    --conf spark.executor.resource.gpu.amount=1 \
-    --conf spark.task.resource.gpu.amount=0.125 \
-    --conf spark.rapids.memory.gpu.allocFraction=0.4 \
-    --conf spark.rapids.memory.gpu.pooling=ARENA \
-    --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
     dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
 
 # Execute refined processor
