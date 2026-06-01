@@ -43,6 +43,7 @@ spark-submit \
     --conf spark.task.resource.gpu.amount=0.5 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
+    --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
     dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
 
 # Execute refined processor
