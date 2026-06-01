@@ -30,9 +30,9 @@ python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -f
 # Execute trusting processor
 echo "Processing trusting data..."
 spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 4G \
+    --master local[8] \
+    --executor-memory 16G \
+    --driver-memory 8G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
@@ -40,7 +40,7 @@ spark-submit \
     --conf spark.rapids.sql.enabled=true \
     --conf spark.rapids.sql.explain=ALL \
     --conf spark.executor.resource.gpu.amount=1 \
-    --conf spark.task.resource.gpu.amount=0.5 \
+    --conf spark.task.resource.gpu.amount=0.125 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
@@ -48,14 +48,10 @@ spark-submit \
 
 # Execute refined processor
 echo "Processing refined data..."
-python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
-python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
-python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
-
 spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 4G \
+    --master local[8] \
+    --executor-memory 16G \
+    --driver-memory 8G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
@@ -63,15 +59,15 @@ spark-submit \
     --conf spark.rapids.sql.enabled=true \
     --conf spark.rapids.sql.explain=ALL \
     --conf spark.executor.resource.gpu.amount=1 \
-    --conf spark.task.resource.gpu.amount=0.5 \
+    --conf spark.task.resource.gpu.amount=0.125 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
 
 spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 4G \
+    --master local[8] \
+    --executor-memory 16G \
+    --driver-memory 8G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
@@ -79,15 +75,15 @@ spark-submit \
     --conf spark.rapids.sql.enabled=true \
     --conf spark.rapids.sql.explain=ALL \
     --conf spark.executor.resource.gpu.amount=1 \
-    --conf spark.task.resource.gpu.amount=0.5 \
+    --conf spark.task.resource.gpu.amount=0.125 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 
 spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 4G \
+    --master local[8] \
+    --executor-memory 16G \
+    --driver-memory 8G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
@@ -95,7 +91,7 @@ spark-submit \
     --conf spark.rapids.sql.enabled=true \
     --conf spark.rapids.sql.explain=ALL \
     --conf spark.executor.resource.gpu.amount=1 \
-    --conf spark.task.resource.gpu.amount=0.5 \
+    --conf spark.task.resource.gpu.amount=0.125 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
