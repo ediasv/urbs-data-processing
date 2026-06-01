@@ -63,10 +63,12 @@ spark-submit \
     --conf spark.rapids.sql.explain=NONE \
     --conf spark.executor.resource.gpu.amount=1 \
     --conf spark.executor.resource.gpu.discoveryScript=/home/ediasv/scripts/get_gpus.sh \
-    --conf spark.task.resource.gpu.amount=0.25 \
+    --conf spark.task.resource.gpu.amount=1 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
     --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
+    --conf spark.default.parallelism=4 \
+    --conf spark.sql.shuffle.partitions=4 \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
