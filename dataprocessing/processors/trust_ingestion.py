@@ -1,9 +1,21 @@
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 from pyspark.sql import DataFrame
 
 from dataprocessing.config import data_path_str
 
 from .sparketl import ETLSpark
+
+# Define the expected structure of the raw JSON
+vehicle_schema = T.StructType(
+    [
+        T.StructField("COD_LINHA", T.StringType(), True),
+        T.StructField("VEIC", T.StringType(), True),
+        T.StructField("LAT", T.StringType(), True),
+        T.StructField("LON", T.StringType(), True),
+        T.StructField("DTHR", T.StringType(), True),
+    ]
+)
 
 
 class TrustProcessing:
@@ -26,15 +38,16 @@ class TrustProcessing:
 
     def vehicles_ingestion(self, period: str):
         return (
-            self.etlspark.sqlContext.read.json(data_path_str("raw", period, "veiculos"))
+            self.etlspark.sqlContext.read.schema(vehicle_schema)
+            .json(data_path_str("raw", period, "veiculos"))
             .select(
                 F.col("COD_LINHA").alias("line_code"),
                 F.date_format(
                     F.unix_timestamp("dthr", "dd/MM/yyyy HH:mm:ss").cast("timestamp"),
                     "yyyy-MM-dd HH:mm:ss",
                 ).alias("event_timestamp"),
-                F.regexp_replace("LAT", ",", ".").cast("double").alias("latitude"),
-                F.regexp_replace("LON", ",", ".").cast("double").alias("longitude"),
+                F.translate("LAT", ",", ".").cast("double").alias("latitude"),
+                F.translate("LON", ",", ".").cast("double").alias("longitude"),
                 F.col("VEIC").alias("vehicle"),
             )
             .withColumn("year", F.year("event_timestamp"))
@@ -71,10 +84,18 @@ class TrustProcessing:
         )
 
     def save(self, df: DataFrame, output: str):
-        (
-            df.coalesce(1)
-            .write.mode("overwrite")
-            .partitionBy("year", "month", "day")
-            .format("parquet")
-            .save(output)
-        )
+        expected_partitions = {"year", "month", "day"}
+        current_columns = set(df.columns)
+
+        writer = df.write.mode("overwrite")
+
+        if expected_partitions.issubset(current_columns):
+            (
+                df.repartition("year", "month", "day")
+                .write.mode("overwrite")
+                .partitionBy("year", "month", "day")
+                .format("parquet")
+                .save(output)
+            )
+        else:
+            writer.format("parquet").save(output)

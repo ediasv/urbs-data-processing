@@ -112,5 +112,4 @@ docker-hive/datanode
 data/
 
 .copilot
-
 .sdkmanrc

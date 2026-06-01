@@ -1,7 +1,7 @@
 #!/bin/bash
 
 START_DATE="2025-07-11"
-END_DATE="2025-07-12"
+END_DATE="2025-07-13"
 YEAR_MONTH="${START_DATE:0:7}"
 
 # Download URBS Data

@@ -469,10 +469,18 @@ class BusTrackingRefinedProcess:
 
     @staticmethod
     def save(df: DataFrame, output: str):
-        (
-            df.coalesce(1)
-            .write.mode("overwrite")
-            .partitionBy("year", "month", "day")
-            .format("parquet")
-            .save(output)
-        )
+        expected_partitions = {"year", "month", "day"}
+        current_columns = set(df.columns)
+
+        writer = df.write.mode("overwrite")
+
+        if expected_partitions.issubset(current_columns):
+            (
+                df.repartition("year", "month", "day")
+                .write.mode("overwrite")
+                .partitionBy("year", "month", "day")
+                .format("parquet")
+                .save(output)
+            )
+        else:
+            writer.format("parquet").save(output)
