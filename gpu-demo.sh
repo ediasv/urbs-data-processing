@@ -6,10 +6,10 @@ module load java/17.0.6
 module load spark/3.5.6
 module load python/3.10
 
-virtualenv -p python3.10 venv
+#virtualenv -p python3.10 venv
 source venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
+#pip install -r requirements.txt
+#pip install -e .
 
 START_DATE="2026-03-01"
 END_DATE="2026-03-30"
