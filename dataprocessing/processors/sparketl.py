@@ -8,14 +8,9 @@ class ETLSpark:
     def __init__(self):
         # Only set the app name and let spark-submit handle all the hardware config
         self.conf = SparkConf().setAppName("URBS_ETL")
-        self.conf = (
-            self.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
-            .set("spark.sql.autoBroadcastJoinThreshold", "-1")
-            .set(
-                "spark.worker.resource.gpu.discoveryScript",
-                "/home/ediasv/scripts/get_gpus.sh",
-            )  # This prevents the deadlock
-        )
+        self.conf = self.conf.set(
+            "spark.sql.sources.partitionOverwriteMode", "dynamic"
+        ).set("spark.sql.autoBroadcastJoinThreshold", "-1")
         self.sc = SparkContext.getOrCreate(conf=self.conf)
         self.sqlContext = SQLContext(self.sc)
 

@@ -61,8 +61,8 @@ spark-submit \
     --conf spark.plugins=com.nvidia.spark.SQLPlugin \
     --conf spark.rapids.sql.enabled=true \
     --conf spark.rapids.sql.explain=ALL \
-    --conf spark.driver.resource.gpu.amount=1 \
     --conf spark.executor.resource.gpu.amount=1 \
+    --conf spark.executor.resource.gpu.discoveryScript=/home/ediasv/scripts/get_gpus.sh \
     --conf spark.task.resource.gpu.amount=0.125 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
