@@ -12,7 +12,7 @@ pip install -r requirements.txt
 pip install -e .
 
 START_DATE="2026-04-16"
-END_DATE="2026-04-30"
+END_DATE="2026-04-21"
 YEAR_MONTH="${START_DATE:0:7}"
 
 # Download URBS Data
