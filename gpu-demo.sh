@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# salloc --time=00:20:00 --gpus-per-node=h100_1g.10gb:1 --ntasks=1 --cpus-per-task=2 --mem=20G --account=def-sukhjit-ab
+
 module load StdEnv/2023
 module load cudacore/.12.2.2
 module load java/17.0.6
@@ -30,31 +32,31 @@ python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -f
 # Execute trusting processor
 echo "Processing trusting data..."
 spark-submit \
-    --master local[4] \
+    --master local[2] \
     --executor-memory 8G \
-    --driver-memory 4G \
+    --driver-memory 8G \
     dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
 
 # Execute refined processor: Dimensions (CPU ONLY)
 echo "Processing refined dimension data on CPU..."
 spark-submit \
-    --master local[4] \
+    --master local[2] \
     --executor-memory 8G \
-    --driver-memory 4G \
+    --driver-memory 8G \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
 
 spark-submit \
-    --master local[4] \
+    --master local[2] \
     --executor-memory 8G \
-    --driver-memory 4G \
+    --driver-memory 8G \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 
 # Execute refined processor: Tracking (GPU ENABLED)
 echo "Processing refined tracking data on GPU..."
 spark-submit \
-    --master local[4] \
-    --executor-memory 6G \
-    --driver-memory 6G \
+    --master local[2] \
+    --executor-memory 8G \
+    --driver-memory 8G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
