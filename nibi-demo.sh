@@ -31,7 +31,6 @@ python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -f
 echo "Processing trusting data..."
 python dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
 
-
 # Execute refined processor
 echo "Processing refined data..."
 python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
