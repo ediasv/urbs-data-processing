@@ -42,14 +42,14 @@ spark-submit \
 echo "Processing refined tracking data on GPU..."
 spark-submit \
     --master local[4] \
-    --executor-memory 8G \
-    --driver-memory 8G \
+    --executor-memory 6G \
+    --driver-memory 6G \
     --jars rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
     --conf spark.plugins=com.nvidia.spark.SQLPlugin \
     --conf spark.rapids.sql.enabled=true \
-    --conf spark.rapids.sql.explain=ALL \
+    --conf spark.rapids.sql.explain=NONE \
     --conf spark.executor.resource.gpu.amount=1 \
     --conf spark.executor.resource.gpu.discoveryScript=/home/ediasv/scripts/get_gpus.sh \
     --conf spark.task.resource.gpu.amount=0.25 \
