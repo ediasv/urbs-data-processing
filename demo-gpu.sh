@@ -1,5 +1,16 @@
 #!/bin/bash
 
+module load StdEnv/2023
+module load cudacore/.12.2.2
+module load java/17.0.6
+module load spark/3.5.6
+module load python/3.10
+
+virtualenv -p python3.10 venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+
 START_DATE="2026-04-16"
 END_DATE="2026-04-30"
 YEAR_MONTH="${START_DATE:0:7}"
@@ -70,7 +81,7 @@ spark-submit \
     --conf spark.task.resource.gpu.amount=0.5 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
-    dataprocessing/job/refined_ingestion.py ds "$START_DATE" -de "$END_DATE" -j itinerary
+    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 
 spark-submit \
     --master local[2] \
@@ -86,6 +97,6 @@ spark-submit \
     --conf spark.task.resource.gpu.amount=0.5 \
     --conf spark.rapids.memory.gpu.allocFraction=0.4 \
     --conf spark.rapids.memory.gpu.pooling=ARENA \
-    dataprocessing/job/refined_ingestion.py ds "$START_DATE" -de "$END_DATE" -j tracking
+    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "All tasks completed!"
