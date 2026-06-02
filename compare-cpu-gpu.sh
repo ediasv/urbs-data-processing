@@ -8,14 +8,14 @@ module load java/17.0.6
 module load spark/3.5.6
 module load python/3.10
 
-#virtualenv -p python3.10 venv
 source venv/bin/activate
-#pip install -r requirements.txt
-#pip install -e .
 
+export EVENT_LOG_DIR=./tmp/spark-events
 export START_DATE="2024-08-01"
 export END_DATE="2024-08-31"
 export YEAR_MONTH="${START_DATE:0:7}"
+export EVENT_LOG_DIR=/tmp/spark-events
+
 
 # Download URBS Data
 echo "Downloading URBS data..."
@@ -51,20 +51,23 @@ spark-submit \
     --driver-memory 8G \
     dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 
-# Execute refined processor: Tracking (GPU ENABLED)
-echo "Processing refined tracking data on GPU..."
-spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 8G \
-    --jars rapids-4-spark_2.12-26.04.2.jar \
-    --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
-    --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
-    --conf spark.plugins=com.nvidia.spark.SQLPlugin \
-    --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
-    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
+time spark-submit \
+  --master local[2] \
+  --executor-memory 8G \
+  --driver-memory 8G \
+  --conf spark.eventLog.enabled=true \
+  --conf spark.eventLog.dir=$EVENT_LOG_DIR \
+  dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
-echo "Uploading refined data to Hugging Face..."
-python dataprocessing/job/upload_huggingface.py -d "$YEAR_MONTH"
-
-echo "All tasks completed!"
+time spark-submit \
+  --master local[2] \
+  --executor-memory 8G \
+  --driver-memory 8G \
+  --jars rapids-4-spark_2.12-26.04.2.jar \
+  --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
+  --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
+  --conf spark.plugins=com.nvidia.spark.SQLPlugin \
+  --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
+  --conf spark.eventLog.enabled=true \
+  --conf spark.eventLog.dir=$EVENT_LOG_DIR \
+  dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
