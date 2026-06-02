@@ -61,5 +61,10 @@ python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16"
 
 ## Optional: run the full flow
 ```
+python main.py 2026-04
+```
+
+## Legacy demo (custom date ranges)
+```
 ./demo.sh
 ```
