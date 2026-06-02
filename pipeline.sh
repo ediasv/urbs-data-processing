@@ -21,6 +21,8 @@ module load java/17.0.6
 module load spark/3.5.6
 module load python/3.10
 
+unset JAVA_TOOL_OPTIONS
+
 source venv/bin/activate
 
 # Calculate dates based on the array task ID
