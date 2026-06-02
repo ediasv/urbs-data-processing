@@ -20,19 +20,15 @@ time spark-submit \
   --master local[2] \
   --executor-memory 8G \
   --driver-memory 8G \
-  --conf spark.eventLog.enabled=true \
-  --conf spark.eventLog.dir=$EVENT_LOG_DIR \
   dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 time spark-submit \
-  --master local[2] \
-  --executor-memory 8G \
-  --driver-memory 8G \
-  --jars rapids-4-spark_2.12-26.04.2.jar \
-  --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
-  --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
-  --conf spark.plugins=com.nvidia.spark.SQLPlugin \
-  --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
-  --conf spark.eventLog.enabled=true \
-  --conf spark.eventLog.dir=$EVENT_LOG_DIR \
-  dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
+    --master local[2] \
+    --executor-memory 8G \
+    --driver-memory 8G \
+    --jars rapids-4-spark_2.12-26.04.2.jar \
+    --conf spark.driver.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
+    --conf spark.executor.extraClassPath=rapids-4-spark_2.12-26.04.2.jar \
+    --conf spark.plugins=com.nvidia.spark.SQLPlugin \
+    --conf spark.rapids.sql.incompatibleDateFormats.enabled=true \
+    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
