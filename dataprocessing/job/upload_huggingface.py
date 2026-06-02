@@ -83,7 +83,7 @@ if month_str != str(month_int):
     month_candidates.append(month_str)
 
 api = HfApi(token=token)
-repo_id = "curitibaresearch/raw-bus-transit"
+repo_id = "curitibaresearch/bus-interpolated"
 datasets = ["bus_tracking", "bus_itineraries", "bus_lines"]
 
 for dataset in datasets:
