@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=16G
 #SBATCH --time=01:00:00
-#SBATCH --array=1-126
+#SBATCH --array=1-114
 #SBATCH --output=logs/urbs_pipeline_%A_%a.out
 
 mkdir -p logs
@@ -13,7 +13,7 @@ mkdir -p logs
 # Clear environment to avoid inheriting conflicting shell variables
 module purge
 
-# Load required modules (cudacore removed as GPU is not optimal for this job)
+# Load required modules
 module load StdEnv/2023
 module load java/17.0.6
 module load spark/3.5.6
@@ -21,11 +21,18 @@ module load python/3.10
 
 source venv/bin/activate
 
-# TODO:
-# Run for every month since 2017-01 until 2026-06
-export START_DATE="2020-05-01"
-export END_DATE="2020-05-31"
+# Calculate dates based on the array task ID
+# 2017-01 to 2026-06 is exactly 114 months
+OFFSET=$((114 - 1))
+
+# Map the offset to the first day of the target month
+export START_DATE=$(date -d "2017-01-01 + ${OFFSET} months" +%Y-%m-01)
+
+# Add one month and subtract one day to get the exact last day of that month
+export END_DATE=$(date -d "${START_DATE} + 1 month - 1 day" +%Y-%m-%d)
 export YEAR_MONTH="${START_DATE:0:7}"
+
+echo "Processing URBS tracking data for: $YEAR_MONTH (from $START_DATE to $END_DATE)"
 
 # Download URBS Data
 echo "Downloading URBS data..."
