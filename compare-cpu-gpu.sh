@@ -16,41 +16,6 @@ export END_DATE="2024-08-31"
 export YEAR_MONTH="${START_DATE:0:7}"
 export EVENT_LOG_DIR=/tmp/spark-events
 
-
-# Download URBS Data
-echo "Downloading URBS data..."
-python dataprocessing/job/download_files.py -s "$START_DATE" -e "$END_DATE" -fd linhas -fl linhas.json.xz
-python dataprocessing/job/download_files.py -s "$START_DATE" -e "$END_DATE" -fd pontoslinha -fl pontosLinha.json.xz
-python dataprocessing/job/download_files.py -s "$START_DATE" -e "$END_DATE" -fd veiculos -fl veiculos.json.xz
-
-# Uncompress URBS Data
-echo "Decompressing URBS data..."
-python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -fd linhas -fl linhas.json.xz
-python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -fd pontoslinha -fl pontosLinha.json.xz
-python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -fd veiculos -fl veiculos.json.xz
-
-# Execute trusting processor
-echo "Processing trusting data..."
-spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 8G \
-    dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
-
-# Execute refined processor: Dimensions (CPU ONLY)
-echo "Processing refined dimension data on CPU..."
-spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 8G \
-    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
-
-spark-submit \
-    --master local[2] \
-    --executor-memory 8G \
-    --driver-memory 8G \
-    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
-
 time spark-submit \
   --master local[2] \
   --executor-memory 8G \
