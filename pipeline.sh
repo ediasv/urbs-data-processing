@@ -8,13 +8,6 @@
 #SBATCH --array=1-114
 #SBATCH --output=~/logs/urbs_pipeline_%A_%a.out
 
-: "${SLURM_ARRAY_TASK_ID:?SLURM_ARRAY_TASK_ID is not set}"
-
-if (( SLURM_ARRAY_TASK_ID < 1 || SLURM_ARRAY_TASK_ID > 114 )); then
-  echo "Invalid SLURM_ARRAY_TASK_ID=${SLURM_ARRAY_TASK_ID} (expected 1-114)" >&2
-  exit 1
-fi
-
 cd ~/repos/urbs-data-processing
 
 # Clear environment to avoid inheriting conflicting shell variables
