@@ -3,12 +3,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12
-#SBATCH --mem=24G
+#SBATCH --mem=32G
 #SBATCH --time=01:30:00
 #SBATCH --array=1-114
-#SBATCH --output=~/logs/urbs_pipeline_%A_%a.out
+#SBATCH --output=/home/ediasv/logs/urbs_pipeline_%A_%a.out
 
-cd ~/repos/urbs-data-processing
+mkdir -p /home/ediasv/logs
+
+cd /home/ediasv/repos/urbs-data-processing
 
 # Clear environment to avoid inheriting conflicting shell variables
 module purge
