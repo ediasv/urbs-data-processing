@@ -10,7 +10,7 @@ module load python/3.10
 
 source venv/bin/activate
 
-export EVENT_LOG_DIR=./tmp/spark-events
+export EVENT_LOG_DIR="./tmp/spark-events"
 export START_DATE="2024-08-01"
 export END_DATE="2024-08-31"
 export YEAR_MONTH="${START_DATE:0:7}"
