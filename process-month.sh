@@ -2,9 +2,9 @@
 #SBATCH --account=def-sukhjit-ab
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=16G
-#SBATCH --time=01:00:00
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=24G
+#SBATCH --time=01:30:00
 #SBATCH --array=1-114
 #SBATCH --output=logs/urbs_pipeline_%A_%a.out
 
