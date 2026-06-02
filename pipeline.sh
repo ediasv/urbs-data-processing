@@ -5,7 +5,7 @@
 # #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=32G
-#SBATCH --array=1-108
+#SBATCH --array=1-126
 #SBATCH --output=logs/urbs_pipeline_%A_%a.out
 
 mkdir -p logs
