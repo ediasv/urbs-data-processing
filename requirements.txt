@@ -23,5 +23,4 @@ shellingham==1.5.4
 tqdm==4.67.3
 typer==0.25.1
 typing_extensions==4.15.0
--e git+ssh://git@github.com/ediasv/urbs-data-processing.git@3d300c0960768308af95b404a8c0879f1be33f7a#egg=urbs_data_processing
 urllib3==1.26.9
