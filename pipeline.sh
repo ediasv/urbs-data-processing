@@ -5,12 +5,12 @@
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=32G
 #SBATCH --time=01:30:00
-#SBATCH --array=1-114
+#SBATCH --array=1-114%5
 #SBATCH --output=/home/ediasv/logs/urbs_pipeline_%A_%a.out
 
 mkdir -p /home/ediasv/logs
 
-cd /home/ediasv/repos/urbs-data-processing
+cd /home/ediasv/repos/urbs-data-processing || exit
 
 # Keep the log file for stderr only; suppress normal progress output.
 # exec 1>/dev/null
@@ -36,13 +36,19 @@ source venv/bin/activate
 OFFSET=$((SLURM_ARRAY_TASK_ID - 1))
 
 # Map the offset to the first day of the target month
-export START_DATE=$(date -d "2017-01-01 + ${OFFSET} months" +%Y-%m-01)
+START_DATE=$(date -d "2017-01-01 + ${OFFSET} months" +%Y-%m-01)
 
 # Add one month and subtract one day to get the exact last day of that month
-export END_DATE=$(date -d "${START_DATE} + 1 month - 1 day" +%Y-%m-%d)
-export YEAR_MONTH="${START_DATE:0:7}"
-export YEAR="${START_DATE:0:4}"
-export MONTH="${START_DATE:5:2}"
+END_DATE=$(date -d "${START_DATE} + 1 month - 1 day" +%Y-%m-%d)
+YEAR_MONTH="${START_DATE:0:7}"
+YEAR="${START_DATE:0:4}"
+MONTH="${START_DATE:5:2}"
+
+export START_DATE
+export END_DATE
+export YEAR_MONTH
+export YEAR
+export MONTH
 
 echo "Processing URBS tracking data for: $YEAR_MONTH (from $START_DATE to $END_DATE)"
 
@@ -95,12 +101,12 @@ echo "  - upload_huggingface"
 python dataprocessing/job/upload_huggingface.py -d "$YEAR_MONTH"
 
 # erase files from the month
-# echo "Erasing files from the month..."
-# rm -rf data/raw/$YEAR_MONTH
-# rm -rf data/staging/$YEAR_MONTH
-# rm -rf data/trusted/busstops/"year=${YEAR}"/"month=${MONTH}"
-# rm -rf data/trusted/lines/"year=${YEAR}"/"month=${MONTH}"
-# rm -rf data/trusted/vehicles/"year=${YEAR}"/"month=${MONTH}"
-# rm -rf data/refined/bus_itineraries/"year=${YEAR}"/"month=${MONTH}"
-# rm -rf data/refined/bus_tracking/"year=${YEAR}"/"month=${MONTH}"
-# rm -rf data/refined/bus_lines/"year=${YEAR}"/"month=${MONTH}"
+echo "Erasing files from the month..."
+rm -rf data/raw/"$YEAR_MONTH"
+rm -rf data/staging/"$YEAR_MONTH"
+rm -rf data/trusted/busstops/"year=${YEAR}"/"month=${MONTH}"
+rm -rf data/trusted/lines/"year=${YEAR}"/"month=${MONTH}"
+rm -rf data/trusted/vehicles/"year=${YEAR}"/"month=${MONTH}"
+rm -rf data/refined/bus_itineraries/"year=${YEAR}"/"month=${MONTH}"
+rm -rf data/refined/bus_tracking/"year=${YEAR}"/"month=${MONTH}"
+rm -rf data/refined/bus_lines/"year=${YEAR}"/"month=${MONTH}"
