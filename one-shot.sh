@@ -1,21 +1,7 @@
 #!/bin/bash
-#SBATCH --account=def-sukhjit-ab
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
-#SBATCH --mem=32G
-#SBATCH --time=01:30:00
-#SBATCH --array=1-114%1
-#SBATCH --output=/home/ediasv/logs/urbs_pipeline_%A_%a.out
-
-mkdir -p /home/ediasv/logs
 
 cd /home/ediasv/repos/urbs-data-processing || exit
 
-# Keep the log file for stderr only; suppress normal progress output.
-# exec 1>/dev/null
-
-# Clear environment to avoid inheriting conflicting shell variables
 echo "Clearing environment..."
 module purge
 
