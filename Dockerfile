@@ -13,13 +13,13 @@ RUN apt-get update \
         openjdk-17-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+COPY requirements.txt setup.py LICENSE ./
+COPY dataprocessing/ dataprocessing/
 
-RUN python -m venv /app/venv \
-    && /app/venv/bin/pip install --no-cache-dir --upgrade pip \
-    && /app/venv/bin/pip install --no-cache-dir -r requirements.txt \
-    && /app/venv/bin/pip install --no-cache-dir -e . \
-    && chmod +x /app/local.sh
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt \
+    && /opt/venv/bin/pip install --no-cache-dir -e .
 
 RUN mkdir -p /app/data
 
