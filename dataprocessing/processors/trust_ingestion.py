@@ -74,12 +74,26 @@ class TrustProcessing:
             .withColumn("line_code", F.col("cod"))
             .withColumn("latitude", F.regexp_replace("lat", ",", "."))
             .withColumn("longitude", F.regexp_replace("lon", ",", "."))
+            .withColumn("itinerary_id", F.col("itinerary_id"))
             .withColumn("name", F.col("nome"))
             .withColumn("number", F.col("num"))
             .withColumn("line_way", F.col("sentido"))
             .withColumn("seq", F.col("seq"))
             .withColumn("type", F.col("tipo"))
-            .drop("GRUPO", "cod", "lat", "lon", "nome", "num", "sentido", "tipo")
+            .select(
+                "line_code",
+                "itinerary_id",
+                "latitude",
+                "longitude",
+                "name",
+                "number",
+                "line_way",
+                "seq",
+                "type",
+                "year",
+                "month",
+                "day",
+            )
             .dropDuplicates()
         )
 
