@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=12
 #SBATCH --mem=32G
 #SBATCH --time=01:30:00
-#SBATCH --array=1-114%5
+#SBATCH --array=1-114%1
 #SBATCH --output=/home/ediasv/logs/urbs_pipeline_%A_%a.out
 
 mkdir -p /home/ediasv/logs
