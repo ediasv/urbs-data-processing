@@ -31,10 +31,6 @@ unset JAVA_TOOL_OPTIONS
 echo "Activating virtualenv..."
 source venv/bin/activate
 
-# Calculate dates based on the array task ID
-# 2017-01 to 2026-06 is exactly 114 months
-OFFSET=$((SLURM_ARRAY_TASK_ID - 1))
-
 START_DATE="2017-01-25"
 END_DATE="2017-01-30"
 YEAR_MONTH="${START_DATE:0:7}"
