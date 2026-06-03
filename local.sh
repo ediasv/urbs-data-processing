@@ -1,30 +1,4 @@
 #!/bin/bash
-#SBATCH --account=def-sukhjit-ab
-#SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=12
-#SBATCH --mem=32G
-#SBATCH --time=01:30:00
-#SBATCH --array=1-114%1
-#SBATCH --output=/home/ediasv/logs/urbs_pipeline_%A_%a.out
-
-mkdir -p /home/ediasv/logs
-
-cd /home/ediasv/repos/urbs-data-processing || exit
-
-# Keep the log file for stderr only; suppress normal progress output.
-# exec 1>/dev/null
-
-# Clear environment to avoid inheriting conflicting shell variables
-echo "Clearing environment..."
-module purge
-
-# Load required modules
-echo "Loading modules..."
-module load StdEnv/2023
-module load java/17.0.6
-module load spark/3.5.6
-module load python/3.10
 
 unset JAVA_TOOL_OPTIONS
 
@@ -33,7 +7,6 @@ source venv/bin/activate
 
 # Calculate dates based on the array task ID
 # 2017-01 to 2026-06 is exactly 114 months
-OFFSET=$((SLURM_ARRAY_TASK_ID - 1))
 
 START_DATE="2017-01-25"
 END_DATE="2017-01-30"
@@ -92,18 +65,3 @@ time spark-submit \
   --master local[*] \
   --driver-memory 14G \
   dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
-
-echo "Uploading to Hugging Face..."
-echo "  - upload_huggingface"
-python dataprocessing/job/upload_huggingface.py -d "$YEAR_MONTH"
-
-# erase files from the month
-echo "Erasing files from the month..."
-rm -rf data/raw/"$YEAR_MONTH"
-rm -rf data/staging/"$YEAR_MONTH"
-rm -rf data/trusted/busstops/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/trusted/lines/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/trusted/vehicles/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/refined/bus_itineraries/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/refined/bus_tracking/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/refined/bus_lines/"year=${YEAR}"/"month=${MONTH}"
