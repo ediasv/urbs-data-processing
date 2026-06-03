@@ -65,42 +65,42 @@ python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -f
 echo "Processing trusting data..."
 echo "  - trust_ingestion"
 spark-submit \
-    --master local[*] \
-    --driver-memory 14G \
-    dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
+  --master local[*] \
+  --driver-memory 14G \
+  dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
 
 echo "Processing refined ingestion: line"
 echo "  - refined_ingestion line"
 spark-submit \
-    --master local[*] \
-    --driver-memory 14G \
-    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
+  --master local[*] \
+  --driver-memory 14G \
+  dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
 
 echo "Processing refined ingestion: itinerary"
 echo "  - refined_ingestion itinerary"
 spark-submit \
-    --master local[*] \
-    --driver-memory 14G \
-    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
+  --master local[*] \
+  --driver-memory 14G \
+  dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 
 echo "Processing refined ingestion: tracking"
 echo "  - refined_ingestion tracking"
 time spark-submit \
-    --master local[*] \
-    --driver-memory 14G \
-    dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
+  --master local[*] \
+  --driver-memory 14G \
+  dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
 
 echo "Uploading to Hugging Face..."
 echo "  - upload_huggingface"
 python dataprocessing/job/upload_huggingface.py -d "$YEAR_MONTH"
 
 # erase files from the month
-echo "Erasing files from the month..."
-rm -rf data/raw/$YEAR_MONTH
-rm -rf data/staging/$YEAR_MONTH
-rm -rf data/trusted/busstops/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/trusted/lines/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/trusted/vehicles/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/refined/bus_itineraries/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/refined/bus_tracking/"year=${YEAR}"/"month=${MONTH}"
-rm -rf data/refined/bus_lines/"year=${YEAR}"/"month=${MONTH}"
+# echo "Erasing files from the month..."
+# rm -rf data/raw/$YEAR_MONTH
+# rm -rf data/staging/$YEAR_MONTH
+# rm -rf data/trusted/busstops/"year=${YEAR}"/"month=${MONTH}"
+# rm -rf data/trusted/lines/"year=${YEAR}"/"month=${MONTH}"
+# rm -rf data/trusted/vehicles/"year=${YEAR}"/"month=${MONTH}"
+# rm -rf data/refined/bus_itineraries/"year=${YEAR}"/"month=${MONTH}"
+# rm -rf data/refined/bus_tracking/"year=${YEAR}"/"month=${MONTH}"
+# rm -rf data/refined/bus_lines/"year=${YEAR}"/"month=${MONTH}"
