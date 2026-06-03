@@ -71,6 +71,11 @@ def decompress_files(folder, file, start_date, end_date):
             print(f"Failed to decompress {fstaging}: {err}")
             continue
 
+        if not decompressed_data.strip():
+            fraw.unlink(missing_ok=True)
+            print(f"Decompressed file is empty. Skipping: {fstaging}")
+            continue
+
         with fraw.open("w") as target:
             target.write(decompressed_data)
         print(f"{fraw} decompressed")

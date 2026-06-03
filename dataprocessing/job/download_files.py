@@ -70,6 +70,12 @@ def download_files(folder, file, start_date, end_date, base_url):
                 out.write(data)
 
         r.release_conn()
+
+        if fd.stat().st_size == 0:
+            fd.unlink(missing_ok=True)
+            print(f"Downloaded file is empty. Removed: {fd}")
+            continue
+
         print(f"Downloaded {url}")
 
     return "download realizado com sucesso"

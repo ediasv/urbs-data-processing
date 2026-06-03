@@ -1,8 +1,12 @@
+import re
+import shutil
+from pathlib import Path
+
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 from pyspark.sql import DataFrame
 
-from dataprocessing.config import data_path_str
+from dataprocessing.config import data_path, data_path_str
 
 from .sparketl import ETLSpark
 
@@ -19,6 +23,20 @@ vehicle_schema = T.StructType(
 
 
 class TrustProcessing:
+    REQUIRED_RAW_FILES = {
+        "veiculos": "veiculos.json",
+        "linhas": "linhas.json",
+        "pontoslinha": "pontosLinha.json",
+    }
+
+    REQUIRED_COLUMNS = {
+        "vehicles": {"COD_LINHA", "VEIC", "LAT", "LON", "DTHR"},
+        "lines": {"cod", "nome", "categoria_servico", "nome_cor", "somente_cartao"},
+        "busstops": {"cod", "lat", "lon", "nome", "num", "sentido", "seq", "tipo"},
+    }
+
+    DAY_PATTERN = re.compile(r"^(\d{4}_\d{2}_\d{2})_.*\.json$")
+
     def __init__(self, date):
         self.etlspark = ETLSpark()
         self.date = date
@@ -27,19 +45,84 @@ class TrustProcessing:
         self.perform()
 
     def perform(self):
-        vehicles = self.vehicles_ingestion(self.date)
-        self.save(vehicles, data_path_str("trusted", "vehicles"))
+        candidate_days = self.list_candidate_days(self.date)
 
-        busstops = self.bustops_ingestion(self.date)
+        processed_days = []
+        skipped_days = []
+
+        for day in candidate_days:
+            try:
+                self.process_day(self.date, day)
+                processed_days.append(day)
+                print(f"Trusted day processed: {day}")
+            except Exception as err:
+                self.cleanup_trusted_day(day)
+                skipped_days.append((day, str(err)))
+                print(f"Trusted day skipped: {day}. Reason: {err}")
+
+        print(
+            f"Trusted ingestion completed for {self.date}. "
+            f"Processed days: {len(processed_days)}. "
+            f"Skipped days: {len(skipped_days)}."
+        )
+
+        if skipped_days:
+            print("Skipped day details:")
+            for day, reason in skipped_days:
+                print(f" - {day}: {reason}")
+
+    def process_day(self, period: str, day: str):
+        self.validate_day_inputs(period, day)
+
+        vehicles = self.vehicles_ingestion(period, day)
+        lines = self.lines_ingestion(period, day)
+        busstops = self.bustops_ingestion(period, day)
+
+        self.assert_dataframe_not_empty(vehicles, "vehicles")
+        self.assert_dataframe_not_empty(lines, "lines")
+        self.assert_dataframe_not_empty(busstops, "busstops")
+
+        self.save(vehicles, data_path_str("trusted", "vehicles"))
+        self.save(lines, data_path_str("trusted", "lines"))
         self.save(busstops, data_path_str("trusted", "busstops"))
 
-        lines = self.lines_ingestion(self.date)
-        self.save(lines, data_path_str("trusted", "lines"))
+    def list_candidate_days(self, period: str):
+        day_sets = []
+        for folder in self.REQUIRED_RAW_FILES:
+            folder_path = data_path("raw", period, folder)
+            if not folder_path.exists():
+                continue
 
-    def vehicles_ingestion(self, period: str):
+            days = set()
+            for file_path in folder_path.glob("*.json"):
+                match = self.DAY_PATTERN.match(file_path.name)
+                if match:
+                    days.add(match.group(1))
+
+            if days:
+                day_sets.append(days)
+
+        if not day_sets:
+            return []
+
+        return sorted(set().union(*day_sets))
+
+    def validate_day_inputs(self, period: str, day: str):
+        for folder, filename in self.REQUIRED_RAW_FILES.items():
+            raw_file = data_path("raw", period, folder, f"{day}_{filename}")
+            if not raw_file.exists():
+                raise FileNotFoundError(f"Missing raw file: {raw_file}")
+            if raw_file.stat().st_size == 0:
+                raise ValueError(f"Empty raw file: {raw_file}")
+
+    def vehicles_ingestion(self, period: str, day: str):
+        src = data_path_str("raw", period, "veiculos", f"{day}_veiculos.json")
+
+        base_df = self.etlspark.sqlContext.read.schema(vehicle_schema).json(src)
+        self.assert_required_columns(base_df, self.REQUIRED_COLUMNS["vehicles"], "vehicles")
+
         return (
-            self.etlspark.sqlContext.read.schema(vehicle_schema)
-            .json(data_path_str("raw", period, "veiculos"))
+            base_df
             .select(
                 F.col("COD_LINHA").alias("line_code"),
                 F.date_format(
@@ -56,9 +139,14 @@ class TrustProcessing:
             .dropDuplicates()
         )
 
-    def lines_ingestion(self, period: str) -> DataFrame:
+    def lines_ingestion(self, period: str, day: str) -> DataFrame:
+        src = data_path_str("raw", period, "linhas", f"{day}_linhas.json")
+
+        base_df = self.etlspark.extract(src)
+        self.assert_required_columns(base_df, self.REQUIRED_COLUMNS["lines"], "lines")
+
         return (
-            self.etlspark.extract(data_path_str("raw", period, "linhas"))
+            base_df
             .withColumn("service_category", F.col("categoria_servico"))
             .withColumn("line_name", F.col("nome"))
             .withColumn("line_code", F.col("cod"))
@@ -68,13 +156,23 @@ class TrustProcessing:
             .dropDuplicates()
         )
 
-    def bustops_ingestion(self, period: str) -> DataFrame:
+    def bustops_ingestion(self, period: str, day: str) -> DataFrame:
+        src = data_path_str("raw", period, "pontoslinha", f"{day}_pontosLinha.json")
+
+        base_df = self.etlspark.extract(src)
+        self.assert_required_columns(base_df, self.REQUIRED_COLUMNS["busstops"], "busstops")
+
+        if "itinerary_id" in base_df.columns:
+            itinerary_col = F.col("itinerary_id")
+        else:
+            itinerary_col = F.col("sentido")
+
         return (
-            self.etlspark.extract(data_path_str("raw", period, "pontoslinha"))
+            base_df
             .withColumn("line_code", F.col("cod"))
             .withColumn("latitude", F.regexp_replace("lat", ",", "."))
             .withColumn("longitude", F.regexp_replace("lon", ",", "."))
-            .withColumn("itinerary_id", F.col("itinerary_id"))
+            .withColumn("itinerary_id", itinerary_col)
             .withColumn("name", F.col("nome"))
             .withColumn("number", F.col("num"))
             .withColumn("line_way", F.col("sentido"))
@@ -96,6 +194,44 @@ class TrustProcessing:
             )
             .dropDuplicates()
         )
+
+    @staticmethod
+    def assert_required_columns(df: DataFrame, required_columns: set, dataset_name: str):
+        current_columns = set(df.columns)
+        missing = sorted(required_columns - current_columns)
+        if missing:
+            raise ValueError(
+                f"Invalid {dataset_name} dataset. Missing columns: {', '.join(missing)}"
+            )
+
+    @staticmethod
+    def assert_dataframe_not_empty(df: DataFrame, dataset_name: str):
+        if df.rdd.isEmpty():
+            raise ValueError(f"No rows produced for {dataset_name}")
+
+    @staticmethod
+    def partition_day_paths(base_folder: str, day: str):
+        year, month, day_of_month = day.split("_")
+        month_int = str(int(month))
+        day_int = str(int(day_of_month))
+
+        return [
+            Path(base_folder) / f"year={year}" / f"month={month}" / f"day={day_of_month}",
+            Path(base_folder) / f"year={year}" / f"month={month_int}" / f"day={day_int}",
+            Path(base_folder) / f"year={year}" / f"month={month}" / f"day={day_int}",
+            Path(base_folder) / f"year={year}" / f"month={month_int}" / f"day={day_of_month}",
+        ]
+
+    def cleanup_trusted_day(self, day: str):
+        outputs = [
+            data_path_str("trusted", "vehicles"),
+            data_path_str("trusted", "lines"),
+            data_path_str("trusted", "busstops"),
+        ]
+
+        for output in outputs:
+            for partition_path in self.partition_day_paths(output, day):
+                shutil.rmtree(partition_path, ignore_errors=True)
 
     def save(self, df: DataFrame, output: str):
         expected_partitions = {"year", "month", "day"}

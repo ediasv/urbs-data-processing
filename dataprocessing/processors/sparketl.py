@@ -15,7 +15,6 @@ class ETLSpark:
         self.sqlContext = SQLContext(self.sc)
 
     def extract(self, src):
-        print(f"FILE: {F.input_file_name()}")
         df = self.sqlContext.read.json(src).withColumn("filepath", F.input_file_name())
 
         df = df.withColumn(
