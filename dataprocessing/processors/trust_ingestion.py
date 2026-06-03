@@ -91,6 +91,7 @@ class TrustProcessing:
         for folder in self.REQUIRED_RAW_FILES:
             folder_path = data_path("raw", period, folder)
             if not folder_path.exists():
+                day_sets.append(set())
                 continue
 
             days = set()
@@ -99,13 +100,12 @@ class TrustProcessing:
                 if match:
                     days.add(match.group(1))
 
-            if days:
-                day_sets.append(days)
+            day_sets.append(days)
 
         if not day_sets:
             return []
 
-        return sorted(set().union(*day_sets))
+        return sorted(set.intersection(*day_sets))
 
     def validate_day_inputs(self, period: str, day: str):
         for folder, filename in self.REQUIRED_RAW_FILES.items():
