@@ -1,9 +1,11 @@
 #!/bin/bash
 
-source venv/bin/activate
+source /opt/venv/bin/activate
 
-START_DATE="2026-03-05"
-END_DATE="2026-03-10"
+# START_DATE="2026-03-05"
+# END_DATE="2026-03-10"
+START_DATE="2017-01-25"
+END_DATE="2017-01-27"
 YEAR_MONTH="${START_DATE:0:7}"
 
 export START_DATE
@@ -21,7 +23,6 @@ python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -f
 python dataprocessing/job/decompress_files.py -s "$START_DATE" -e "$END_DATE" -fd veiculos -fl veiculos.json.xz
 
 python dataprocessing/job/trust_ingestion.py -d "$YEAR_MONTH"
-
 python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j line
 python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j itinerary
 python dataprocessing/job/refined_ingestion.py -ds "$START_DATE" -de "$END_DATE" -j tracking
