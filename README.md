@@ -68,3 +68,13 @@ python main.py 2026-04
 ```
 ./demo.sh
 ```
+
+# Build the image (first time, or after dep changes)
+docker compose build
+
+# Start the container in detached mode (keeps running with bash)
+docker compose up -d
+
+# Run local.sh inside the running container
+docker compose exec urbs-data-processing bash -lc "./local.sh"
+docker compose exec urbs-data-processing bash -lc "./local.sh"
