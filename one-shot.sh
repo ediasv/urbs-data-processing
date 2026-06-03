@@ -17,7 +17,7 @@ unset JAVA_TOOL_OPTIONS
 echo "Activating virtualenv..."
 source venv/bin/activate
 
-START_DATE="2017-01-25"
+START_DATE="2017-01-01"
 END_DATE="2017-01-30"
 YEAR_MONTH="${START_DATE:0:7}"
 YEAR="${START_DATE:0:4}"
