@@ -1,19 +1,26 @@
-FROM jupyter/pyspark-notebook:spark-3.2.1
+FROM python:3.10-slim-bookworm
 
-USER root
-RUN apt-get -qq update && apt-get install -y --no-install-recommends apt-utils openssh-client mysql-client
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DATA_DIR=/app/data \
+    SPARK_SUBMIT_OPTS="--add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
 
-USER $NB_UID
+WORKDIR /app
 
-WORKDIR /opt/urbs-data-processing/
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        bash \
+        openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
 
-ADD requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements.txt setup.py LICENSE ./
+COPY dataprocessing/ dataprocessing/
 
-CMD python setup.py -q develop && jupyter lab \
-        --ip=0.0.0.0 \
-        --port=8085 \
-        --allow-root \
-        --NotebookApp.notebook_dir='./notebooks' \
-        --NotebookApp.token='' \
-        --NotebookApp.password=''
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir --upgrade pip \
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt \
+    && /opt/venv/bin/pip install --no-cache-dir -e .
+
+RUN mkdir -p /app/data
+
+CMD ["bash"]

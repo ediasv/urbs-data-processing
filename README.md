@@ -1,77 +1,80 @@
-### URBS DATA PROCESSING 
+# URBS DATA PROCESSING
 
-### Build docker-image
+This pipeline downloads URBS open data, decompresses it, and produces trusted/refined Parquet datasets locally. The refined tracking job includes the interpolation step.
 
-``` 
-docker-compose build
+## Requirements
+- Python 3.10
+- Java 11 (required by PySpark; Java 17 is not supported by Spark 3.2.1)
+
+## Install
+```
+virtualenv -p python3.10 venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
 ```
 
-### Download URBS Data
-```
-
-### download files trom UFPR portal
-
-docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd folder -fl file
-
--fd: linhas, pontoslinha, veiculos
--fl: linhas.json.xz, pontosLinha.json.xz, veiculos.json.xz
-
-## Examples
-
-docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
-
-docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
-
-docker-compose exec jupyterlab python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
-
+## Data directory
+All files are stored locally under a single data root. By default this is `./data`.
 
 ```
-### Uncompress URBS Data
+export DATA_DIR=./data  # optional, defaults to ./data
 ```
 
-## uncompress urbs data 
+Outputs:
+- `DATA_DIR/staging` (downloaded `.xz`)
+- `DATA_DIR/raw` (decompressed JSON)
+- `DATA_DIR/trusted` (Parquet)
+- `DATA_DIR/refined` (Parquet, includes interpolation output)
 
-docker-compose exec jupyterlab python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
-
--fd: linhas, pontoslinha, veiculos
--fl: linhas.json.xz, pontosLinha.json.xz, veiculos.json.xz
-
-docker-compose exec jupyterlab python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
-
-docker-compose exec jupyterlab python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
-
-docker-compose exec jupyterlab python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
-
+## Download URBS data
+```
+python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
+python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
+python dataprocessing/job/download_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
 ```
 
-### Execute trusting processor
+Parameters:
+- `-fd`: `linhas`, `pontoslinha`, `veiculos`
+- `-fl`: `linhas.json.xz`, `pontosLinha.json.xz`, `veiculos.json.xz`
+
+## Decompress URBS data
 ```
-## process entire month data, prepare, deduplicate and clean for following processing pipelines.
-
-docker-compose exec jupyterlab  python dataprocessing/job/trust_ingestion.py -d "2022-07"
-
-```
-
-### Execute refined processor 
-```
-
-### Execute refined processing for creating several enriched datasources.
-
-docker-compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
-
--j [line, itinerary, tracking]
-
-docker-compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
-
-docker-compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j itinerary
-
-docker-compose exec jupyterlab  python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j tracking
-
+python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd linhas -fl linhas.json.xz
+python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd pontoslinha -fl pontosLinha.json.xz
+python dataprocessing/job/decompress_files.py -s "2022-07-11" -e "2022-07-16" -fd veiculos -fl veiculos.json.xz
 ```
 
-### Load data into MySQL
-
+## Execute trust processor
 ```
-docker-compose exec jupyterlab  python dataprocessing/job/mysql_loader.py -ds "2022-07-11"  -de "2022-07-16"
-
+python dataprocessing/job/trust_ingestion.py -d "2022-07"
 ```
+
+## Execute refined processor (includes interpolation)
+```
+python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j line
+python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j itinerary
+python dataprocessing/job/refined_ingestion.py -ds "2022-07-11" -de "2022-07-16" -j tracking
+```
+
+`-j` options: `line`, `itinerary`, `tracking`
+
+## Optional: run the full flow
+```
+python main.py 2026-04
+```
+
+## Legacy demo (custom date ranges)
+```
+./demo.sh
+```
+
+# Build the image (first time, or after dep changes)
+docker compose build
+
+# Start the container in detached mode (keeps running with bash)
+docker compose up -d
+
+# Run local.sh inside the running container
+docker compose exec urbs-data-processing bash -lc "./local.sh"
+docker compose exec urbs-data-processing bash -lc "./local.sh"

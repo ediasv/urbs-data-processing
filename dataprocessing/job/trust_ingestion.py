@@ -1,9 +1,10 @@
 # Path hack.
-import sys, os
+import os
+import sys
 from argparse import ArgumentParser
 from datetime import datetime
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(".."))
 
 from dataprocessing.processors.trust_ingestion import TrustProcessing
 
@@ -12,7 +13,7 @@ parser.add_argument("-d", "--date", dest="date", help="date", metavar="DATE")
 
 args = parser.parse_args()
 
-dt = datetime.strptime(args.date, '%Y-%m')
+dt = datetime.strptime(args.date, "%Y-%m")
 
 dt = dt.strftime("%Y-%m")
 

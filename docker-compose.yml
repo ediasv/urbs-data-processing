@@ -1,31 +1,15 @@
-version: '3.7'
-
-networks:
-  default:
-    name: urbs-network
-    driver: bridge
-
 services:
-  jupyterlab:
-    container_name: urbs-jupyterlab
-    restart: unless-stopped
-    user: root
-    build: .
-    image: utfpr/jupyterlab:latest
-    working_dir: /opt/urbs-data-processing/
-    ports:
-      - 8085:8085
-      - 4040:4040
-    volumes:
-      - .:/opt/urbs-data-processing/
-      - /mnt/work/datalake:/data/
-      - /mnt/work/database/mysql:/var/lib/mysql/
-      - /mnt/work/database/mysql-files:/var/lib/mysql-files/
-    networks:
-      - default
+  urbs-data-processing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: urbs-data-processing:latest
+    working_dir: /app
     environment:
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 123456789
-      MYSQL_DATABASE: busanalysis_dw      
+      DATA_DIR: /app/data
+      SPARK_SUBMIT_OPTS: "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
+    volumes:
+      - ./data:/app/data
+      - .:/app
+    stdin_open: true
+    tty: true
